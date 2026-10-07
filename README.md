@@ -12,7 +12,9 @@
 
 This repo builds a complete QR Code Model 2 generator from nothing and checks every output with a production reader. In about ten minutes you will understand the five stages — encode, error correction, placement, masking, format — reproduce the classic `hello, world` code (21×21, mask 0), and see exactly how much damage it survives (5 broken bytes read, 6 fail) and how big a centre logo each level allows. Students, teachers, interview candidates, makers and product teams get a 30-second quick start, a beginner guide that assumes zero background, an interactive website with a mask lab and a scratch-to-pro quiz, plus Docker-reproducible benchmarks.
 
-🌐 **Interactive website:** open [`preview.html`](preview.html) locally, or publish it with GitHub Pages (Settings → Pages → Deploy from branch → `main` / root) and share the link. It contains the beginner guide, mask explorer, live result tables and a 10-question quiz.
+🌐 **Interactive website:** open [`preview.html`](preview.html) locally, or use the live Pages links below. It contains the beginner guide, mask explorer, live result tables and a 10-question quiz.
+
+🌐 **Live:** [`/` (redirect)](https://M0-AR.github.io/qr-from-scratch-phd-2026/) · [`/preview.html`](https://M0-AR.github.io/qr-from-scratch-phd-2026/preview.html) · [`/docs/preview.html`](https://M0-AR.github.io/qr-from-scratch-phd-2026/docs/preview.html)
 
 ![Site hero](docs/assets/preview-hero.png)
 
@@ -297,13 +299,28 @@ Mask explorer states (`docs/assets/mask-0.png` … `mask-7.png`), pipeline diagr
 
 ## View this repo as a website
 
-`preview.html` + `docs/assets/` is a complete static site. No build, no framework, works offline except badge SVGs.
+Live site for this repo (works right now — source `/` root):
+
+- https://M0-AR.github.io/qr-from-scratch-phd-2026/ → redirect to the interactive site
+- https://M0-AR.github.io/qr-from-scratch-phd-2026/preview.html → interactive site (canonical)
+- https://M0-AR.github.io/qr-from-scratch-phd-2026/docs/preview.html → same site (mirror for source `/docs`)
+
+| `/` | `/preview.html` | `/docs/preview.html` | Meaning |
+|---|---|---|---|
+| 200 | 200 | 200 | robust mirrors in place ✅ (this repo) |
+| 200 | 200 | 404 | source = `/` root only |
+| 200 | 404 | 200 | source = `/docs` only |
+| 404 | 404 | 404 | Pages off / still building / wrong branch |
+
+`preview.html` + `docs/assets/` is a complete static site. `docs/preview.html` is the same page with `docs/assets/` → `assets/` so it also renders under source `/docs`. `index.html` (root + `docs/`) redirects to `preview.html`. `.nojekyll` (root + `docs/`) keeps Pages from invoking Jekyll. All asset paths are relative, so project Pages under `/<repo>/` resolve.
 
 ```bash
-# local
+# local — both must render identically in the browser
 open preview.html
+open docs/preview.html
 # or serve
 python3 -m http.server 8000  # → http://localhost:8000/preview.html
+                             # → http://localhost:8000/docs/preview.html
 ```
 
 Publish with GitHub Pages (2026 flow):
@@ -311,8 +328,10 @@ Publish with GitHub Pages (2026 flow):
 ```
 1. Push this repo to GitHub
 2. GitHub → Settings → Pages
-3. Source: Deploy from branch → Branch: main, Folder: / (root)
-4. Save → open https://<you>.github.io/<repo>/preview.html
+3. Source: Deploy from branch → Branch: main, Folder: / (root) [recommended;
+   /docs also works because mirrors exist]
+4. Wait 1–2 min for "pages build and deployment" Action → green
+5. Probe: / → 200, /preview.html → 200, /docs/preview.html → 200
 ```
 
 Keep images in `docs/assets/` and under 5 MB (ours: GIF ~9 KB, hero ~239 KB). README links here; this page links back to the repo.
@@ -323,7 +342,10 @@ Keep images in `docs/assets/` and under 5 MB (ours: GIF ~9 KB, hero ~239 KB). RE
 qr_from_scratch.py   maker, stdlib only (~325 lines: encode/ecc/place/mask/format/PNG)
 verify.py            5 live reader gates (must print ALL VERIFY PASSED)
 benchmark.py         damage (20×N) + logo growth + mask/timing (seed 0)
-preview.html         interactive site: guide + mask lab + quiz + results
+preview.html         interactive site (canonical, root; uses docs/assets/)
+docs/preview.html    same site for source /docs (uses assets/; diff is asset paths only)
+index.html + docs/index.html  redirect to preview.html so / resolves to the site
+.nojekyll + docs/.nojekyll     Pages serves files statically, no Jekyll
 docs/assets/         QR PNGs, 8 mask PNGs, GIF, MP4, SVG, browser screenshots
 docs/PAPER.md        full paper draft (abstract → references + appendices)
 experiments/RESULTS.md  live numbers log with date/reader version
