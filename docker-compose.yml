@@ -1,0 +1,16 @@
+services:
+  qr-verify:
+    build: .
+    volumes:
+      - ./out:/app/out
+    command: python3 verify.py
+  qr-bench:
+    build: .
+    volumes:
+      - ./out:/app/out
+    command: python3 benchmark.py
+  qr-make:
+    build: .
+    volumes:
+      - ./out:/app/out
+    # example: docker compose run qr-make python3 qr_from_scratch.py "hello, world" out/hello.png

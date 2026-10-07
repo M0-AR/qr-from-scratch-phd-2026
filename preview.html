@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Codes from Nothing — Verified Minimal Implementation</title>
+<meta name="description" content="Build a scannable QR code maker in ~325 lines of dependency-free Python. Verified live with a real reader. Interactive guide from scratch to pro.">
+<style>
+:root{--bg:#020617;--card:#0f172a;--line:#1e293b;--txt:#e2e8f0;--mut:#94a3b8;--acc:#38bdf8;--grn:#34d399;--amb:#fbbf24;--red:#f87171}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;line-height:1.6}
+a{color:var(--acc)}code{background:#1e293b;padding:2px 6px;border-radius:6px;font-size:.9em}pre{background:#0b1220;border:1px solid var(--line);border-radius:12px;padding:16px;overflow:auto}
+nav{position:sticky;top:0;z-index:10;background:rgba(2,6,23,.9);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+nav .in{max-width:1080px;margin:auto;display:flex;gap:16px;padding:12px 20px;flex-wrap:wrap;align-items:center}
+nav a.t{color:var(--mut);text-decoration:none;font-size:14px}nav a.t:hover{color:var(--txt)}
+.wrap{max-width:1080px;margin:auto;padding:24px 20px 80px}
+.hero{display:grid;grid-template-columns:1.2fr .8fr;gap:24px;align-items:center;margin-top:16px}
+@media(max-width:860px){.hero{grid-template-columns:1fr}}
+.badges{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.badges img{height:22px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin:18px 0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:760px){.grid2{grid-template-columns:1fr}}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}@media(max-width:860px){.grid3{grid-template-columns:1fr}}
+h1{font-size:clamp(28px,4vw,44px);line-height:1.1;margin:.2em 0}
+h2{margin-top:40px;border-bottom:1px solid var(--line);padding-bottom:8px}
+.ceo{background:linear-gradient(135deg,#0ea5e9,#22d3ee);color:#02131a;border-radius:16px;padding:20px;font-size:18px}
+.qrrow{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start}
+.qrrow figure{margin:0;background:#fff;border-radius:12px;padding:10px;color:#000;text-align:center}
+.qrrow img{image-rendering:pixelated;display:block}
+.btn{display:inline-block;background:var(--acc);color:#02131a;font-weight:700;border-radius:10px;padding:10px 18px;text-decoration:none;margin:6px 6px 0 0}
+.btn.ghost{background:transparent;color:var(--txt);border:1px solid var(--line)}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{border:1px solid var(--line);padding:8px 10px;text-align:left}th{background:#0b1220}
+.maskbtns{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.maskbtns button{background:#1e293b;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:8px 12px;cursor:pointer}
+.maskbtns button.on{background:var(--acc);color:#02131a;font-weight:700}
+#quizQ{font-size:18px;font-weight:700}#quizOpts button{display:block;width:100%;text-align:left;margin:8px 0;background:#1e293b;color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:10px 14px;cursor:pointer}
+#quizOpts button.ok{border-color:var(--grn)}#quizOpts button.bad{border-color:var(--red)}
+.bar{height:10px;background:#1e293b;border-radius:99px;overflow:hidden}#barfill{height:100%;width:0;background:linear-gradient(90deg,#38bdf8,#34d399)}
+.step{background:#0b1220;border-left:4px solid var(--acc);border-radius:0 12px 12px 0;padding:12px 16px;margin:12px 0}
+.k{color:var(--grn);font-weight:700}.warn{color:var(--amb)}
+footer{color:var(--mut);font-size:13px;margin-top:40px}
+</style>
+</head>
+<body>
+<nav><div class="in">
+<strong>◧ QR from Nothing</strong>
+<a class="t" href="#start">Start</a><a class="t" href="#beginner">Beginner 🌱</a><a class="t" href="#stages">5 stages</a><a class="t" href="#explorer">Mask lab</a><a class="t" href="#results">Results</a><a class="t" href="#quiz">Quiz</a><a class="t" href="#stories">Uses</a><a class="t" href="#pages">Pages</a>
+</div></nav>
+<div class="wrap">
+
+<div class="ceo">
+<strong>CEO summary — 3 sentences.</strong><br>
+This repo builds a real, scannable QR code maker in about 325 lines of plain Python with zero third-party libraries — and proves every code with a real reader. In ten minutes you will understand encode → error-correction → placement → masking → format, reproduce the classic <code>hello, world</code> code (21×21, mask 0), and see exactly how much damage and how big a logo it survives. Teachers, students, interview candidates, makers and product teams can copy the 30-second quick start below and be productive immediately.
+</div>
+
+<div class="badges">
+<img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT">
+<img src="https://img.shields.io/badge/python-3.8%2B-blue" alt="python">
+<img src="https://img.shields.io/badge/dependencies-zero-brightgreen" alt="zero deps">
+<img src="https://img.shields.io/badge/verified-OpenCV_reader-brightgreen" alt="verified">
+<img src="https://img.shields.io/badge/versions-1--6-blue" alt="versions">
+</div>
+
+<h1>QR Codes from Nothing</h1>
+<p>A verified, minimal implementation with live robustness benchmarks. <strong>441 little squares hold words</strong> because 208 of them are a carefully coded polynomial, wrapped in finders a reader can find from any angle.</p>
+
+<div class="hero">
+<div>
+<h2 id="start" style="border:none;margin-top:0">⚡ 30-second quick start</h2>
+<pre>python3 qr_from_scratch.py "hello, world" out/hello.png
+python3 verify.py      # real reader check — must say ALL VERIFY PASSED
+python3 benchmark.py   # damage + logo + mask — live numbers</pre>
+<a class="btn" href="#beginner">🌱 Start beginner guide</a>
+<a class="btn ghost" href="#quiz">Take the 2-min quiz →</a>
+</div>
+<div class="card">
+<div class="qrrow">
+<figure><img src="docs/assets/qr-hello-v1M.png" width="170" height="170" alt="hello world QR"><figcaption><code>V1-M hello</code></figcaption></figure>
+<figure><img src="docs/assets/qr-repo-v4M.png" width="170" height="170" alt="V4 QR"><figcaption><code>V4-M 33×33</code></figcaption></figure>
+</div>
+<p style="font-size:13px;color:var(--mut)">Left: scan me — it reads <code>hello, world</code>. Right: 2-block interleaved V4. Both made by this repo, both decoded live.</p>
+</div>
+</div>
+
+<div class="card">
+<h3 style="margin-top:0">🎬 Demo (GIF + video)</h3>
+<div class="qrrow">
+<div><img src="docs/assets/demo-masks.gif" width="220" alt="mask cycle demo" style="border-radius:12px;border:1px solid var(--line)"><div style="font-size:13px;color:var(--mut)">All 8 masks for <code>hello, world</code> — winner is mask 0 (lowest penalty).</div></div>
+<div style="flex:1;min-width:260px">
+<video controls width="100%" style="border-radius:12px;border:1px solid var(--line)" poster="docs/assets/qr-hello-v1M.png"><source src="docs/assets/demo-pipeline.mp4" type="video/mp4">Your browser cannot play video — see the GIF.</video>
+<div style="font-size:13px;color:var(--mut)">Video: pipeline fly-through. On GitHub the README shows the GIF (GitHub strips <code>&lt;video&gt;</code> in markdown); click through to this page or YouTube for full video. To add your own: upload MP4 via a GitHub issue, or link a YouTube thumbnail.</div>
+</div>
+</div>
+<img src="docs/assets/pipeline.svg" alt="5-stage pipeline" style="width:100%;margin-top:12px;border-radius:12px">
+</div>
+
+<h2 id="beginner">🌱 Beginner guide — read this and you are a professional</h2>
+<div class="card">
+<p><strong>You will know more than most interview candidates.</strong> No maths degree needed. Let's work this out in a step-by-step way to be sure we have the right answer.</p>
+<div class="step"><strong>Step 0 — What is a QR code?</strong><br>A square of black/white cells (“modules”). Three big corner squares are <strong>finders</strong>. Everything else is data + helpers + bodyguards (error correction).</div>
+<div class="step"><strong>Step 1 — Text is already numbers.</strong><br><code>hello, world</code> = 12 bytes: 104, 101, 108, 108, 111 … A computer stores letters as numbers (UTF-8). We just pack those numbers as bits.</div>
+<div class="step"><strong>Step 2 — Say what follows.</strong><br>First 4 bits <code>0100</code> = “plain bytes next”. Next 8 bits = length (12). Then the 12 bytes. That's it. <em>Let's work this out:</em> 4 + 8 + 12×8 = 108 bits. Capacity V1-M = 16×8 = 128 bits. Leftover 20 bits → up to 4 zeros = “end”, pad to a full byte, then filler <code>236, 17, 236…</code> to reach 16. <span class="k">Check: 14 letters need 4+8+112=124 ≤ 128 ✓; 15 letters need 132 &gt; 128 ✗ → so V2.</span></div>
+<div class="step"><strong>Step 3 — Bodyguards (error correction).</strong><br>Receipts crumple. We add 10 check bytes (Reed–Solomon). Adding = XOR (so 3+7=4). Multiplying uses powers of two with a wrap (256→29). Divide the 16-byte polynomial by a fixed generator; remainder = check bytes. <em>Rule of thumb:</em> each broken byte costs 2 check bytes → 10 fix <strong>5</strong>. That's why 5 damaged bytes read 20/20 and 6 read 0/20.</div>
+<div class="step"><strong>Step 4 — Put bits on the grid.</strong><br>V1 = 21×21. Finders + borders + dotted timing lines + 1 always-black module + 2 format strips = 233 taken. Left 208 = 26 bytes. Snake up/down from bottom-right, 2 columns at a time, skip the timing column.</div>
+<div class="step"><strong>Step 5 — Mask = sunglasses.</strong><br>Big flat areas confuse readers. Try 8 flip-patterns, score each (runs, 2×2 blocks, finder-lookalikes = 40 pts, dark balance). Unmasked = 460. Checkerboard mask 0 = <strong>319</strong> → keep it. Reader knows which mask from the format strip.</div>
+<div class="step"><strong>Step 6 — Label the box (format).</strong><br>15 bits: 2 for level (M=<code>00</code>) + 3 for mask (<code>000</code>) + 10 check + XOR disguise. Written <strong>twice</strong> so one damaged copy still reads. Example M+mask0 → <code>0x5412</code>.</div>
+<p><span class="k">You did it.</span> Save as PNG (tiny writer included), scan with your phone — it reads <code>hello, world</code>. The quiz below proves it. The rest of this page is the same story with exact numbers.</p>
+</div>
+
+<h2 id="stages">🔧 The 5 stages (exact)</h2>
+<div class="grid3">
+<div class="card"><strong>1 · Encode</strong><br><code>0100 | len(8b) | data</code><br>Terminator ≤4 zeros, pad <code>EC 11</code>.<br>V1-M: 16B → 14 chars max.</div>
+<div class="card"><strong>2 · ECC</strong><br>GF(256), primitive <code>0x11D</code>.<br>16 ÷ generator → 10 check.<br>26 total divide evenly.</div>
+<div class="card"><strong>3 · Place</strong><br>21×21, 233 fixed, 208 data.<br>Zigzag BR→, skip col 6.<br>Align + dark <code>(8,4V+9)</code>.</div>
+</div>
+<div class="grid2">
+<div class="card"><strong>4 · Mask</strong><br>8 formulas, 4 rules (3/3/40/10).<br><code>hello</code>: 460 → <strong>0:319</strong>, 1:469, 2:360, 3:478, 4:483, 5:437, 6:384, 7:403.</div>
+<div class="card"><strong>5 · Format</strong><br>15b = 2 EC + 3 mask + 10 BCH.<br><code>0x537</code> ÷, XOR <code>0x5412</code>.<br>M0=<code>0x5412</code> L0=<code>0x77C4</code>, ×2.</div>
+</div>
+
+<h2 id="explorer">🧪 Mask lab — click and see</h2>
+<div class="card">
+<p>Same data, 8 masks. Only data modules flip; finders never move. Lowest penalty wins (mask 0 here).</p>
+<div class="maskbtns" id="maskbtns"></div>
+<div class="qrrow"><img id="maskimg" src="docs/assets/mask-0.png" width="240" alt="mask preview" style="image-rendering:pixelated;background:#fff;padding:8px;border-radius:12px"><div><div id="maskcap" style="font-size:15px"></div><div style="color:var(--mut);font-size:13px">Penalties measured live: 0:319 · 1:469 · 2:360 · 3:478 · 4:483 · 5:437 · 6:384 · 7:403. Any mask scans (format says which) — penalty only picks the cleanest.</div></div></div>
+</div>
+
+<h2 id="results">📊 Live results (not theory)</h2>
+<div class="card">
+<h3>Damage — flip whole bytes, 20 trials each (V1-M, seed 0)</h3>
+<table><tr><th>broken bytes</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th></tr><tr><td>read /20</td><td>20</td><td>20</td><td>20</td><td>20</td><td>20</td><td><strong>0</strong></td></tr></table>
+<p>Sharp threshold at 5 = ⌊10/2⌋. Each repair needs position + value.</p>
+<h3>Logo — white centre square until the reader quits</h3>
+<table><tr><th>level</th><th>small (hello V1/V2)</th><th>larger (URL V4–V6)</th><th>often quoted</th></tr><tr><td>L</td><td>3.6%</td><td><strong>4.5%</strong></td><td>4%</td></tr><tr><td>M</td><td>8.2%</td><td><strong>8.8%</strong></td><td>9%</td></tr><tr><td>Q</td><td>7.8%</td><td><strong>15.2%</strong></td><td>14%</td></tr><tr><td>H</td><td>10.2%</td><td>needs V7+</td><td>19%</td></tr></table>
+<p>Bigger codes survive bigger <em>relative</em> logos (2+ blocks spread bursts; V1 has 1). Logo guidance must be version-conditioned — a publishable nuance.</p>
+<h3>Build</h3><p>V4 average ~12 ms here (reference ~8 ms; CPU-dependent; mask trial dominates).</p>
+</div>
+
+<h2 id="quiz">🎓 Interactive quiz — from scratch to pro</h2>
+<div class="card">
+<div class="bar"><div id="barfill"></div></div>
+<div id="quizQ" style="margin-top:12px"></div>
+<div id="quizOpts"></div>
+<div id="quizFb" style="min-height:28px;margin-top:8px"></div>
+<div style="color:var(--mut);font-size:13px" id="quizProg"></div>
+</div>
+
+<h2 id="stories">💡 What can you use this for? (user stories)</h2>
+<div class="grid3">
+<div class="card"><strong>� student</strong><br>“I want to <em>see</em> Galois fields, not just hear about them.”<br>Run <code>verify.py</code>, break one byte, watch it heal.</div>
+<div class="card"><strong>👩‍🏫 teacher</strong><br>Live 10-min demo: 441 squares → words → torn sticker still scans.<br>Quiz above = ready exit ticket.</div>
+<div class="card"><strong>💼 interview prep</strong><br>Explain finder <code>1:1:3:1:1</code>, mask penalty, why 10 EC fix 5 — you now beat most candidates.</div>
+</div>
+<div class="grid3">
+<div class="card"><strong>🔧 maker / retail</strong><br>Offline labels, Wi-Fi cards, event badges. Zero deps = runs on a Raspberry Pi.</div>
+<div class="card"><strong>🔒 security-minded</strong><br>Auditable ~325 lines. No network, no blob. Know exactly what your QR contains.</div>
+<div class="card"><strong>📦 product team</strong><br>Need V1–V6 URLs/text/TOTP? Copy one function. Need more? Extend tables to V40 (roadmap in README).</div>
+</div>
+
+<h2>✨ Features</h2>
+<div class="card"><table>
+<tr><th>Feature</th><th>Detail</th></tr>
+<tr><td>Zero dependencies</td><td>Maker uses stdlib only (<code>struct+zlib</code> for PNG). Verify needs OpenCV.</td></tr>
+<tr><td>Versions 1–6, L/M/Q/H, byte mode</td><td>URLs, text, Wi-Fi, TOTP. Smallest fitting version auto-picked.</td></tr>
+<tr><td>Real error correction</td><td>GF(256) + Reed–Solomon + interleave (V4 = 2×32).</td></tr>
+<tr><td>Correct masking</td><td>All 8 tried, 4-rule penalty, winner kept. Verified 460→319.</td></tr>
+<tr><td>Spec format</td><td>15-bit BCH + XOR, twice + dark module. Vectors <code>0x5412/0x77C4</code>.</td></tr>
+<tr><td>Live-proof</td><td><code>verify.py</code> + <code>benchmark.py</code> + Docker. Nothing simulation-only.</td></tr>
+<tr><td>Learnable</td><td>Beginner guide + mask lab + quiz on this page.</td></tr>
+</table></div>
+
+<h2>❓ FAQ</h2>
+<div class="card">
+<p><strong>Do I need the internet to make codes?</strong> No. Generation is offline. The reader check needs OpenCV installed, once.</p>
+<p><strong>Why does a torn code still scan?</strong> Check bytes let the reader solve for missing values — 2 check bytes per broken byte.</p>
+<p><strong>Which level for a logo?</strong> H survives biggest, but makes a bigger code. For small V1, keep logos tiny (see table). Test with your printer + phone.</p>
+<p><strong>Can I force version/mask?</strong> Yes: <code>make_matrix("hi", "M", ver=2, mask=3)</code>.</p>
+<p><strong>Alphanumeric / V7+?</strong> Roadmap: pack 2 chars in 11 bits; add tables + 18-bit version info.</p>
+</div>
+
+<h2 id="pages">🌐 View this repo as a website (GitHub Pages)</h2>
+<div class="card">
+<p><strong>You are looking at it.</strong> This file (<code>preview.html</code>) is a zero-build static site. Publish it in 1 minute:</p>
+<pre>1. Push this repo to GitHub
+2. GitHub → Settings → Pages
+3. Source: Deploy from branch → Branch: main, Folder: / (root)
+4. Save → open https://&lt;you&gt;.github.io/&lt;repo&gt;/preview.html</pre>
+<p>Keep assets in <code>docs/assets/</code> (GIF &lt; 5 MB ✓ ours is ~9 KB). README links here; this page links back to the repo. No actions needed.</p>
+</div>
+
+<footer>MIT licensed. Spec facts are facts; code here is original. If you use the benchmarks, cite repo + date + reader version.<br>Files: <code>qr_from_scratch.py</code> · <code>verify.py</code> · <code>benchmark.py</code> · <code>out/</code> · <code>docs/PAPER.md</code></footer>
+</div>
+<script>
+const penalties=[319,469,360,478,483,437,384,403];
+const btns=document.getElementById('maskbtns'),img=document.getElementById('maskimg'),cap=document.getElementById('maskcap');
+penalties.forEach((p,i)=>{const b=document.createElement('button');b.textContent='mask '+i+(i===0?' ★':'');b.onclick=()=>{btns.querySelectorAll('button').forEach(x=>x.classList.remove('on'));b.classList.add('on');img.src='docs/assets/mask-'+i+'.png';cap.innerHTML='<strong>mask '+i+'</strong> — penalty <strong>'+p+'</strong>'+(i===0?' (winner ✓)':'')};if(i===0)b.classList.add('on');btns.appendChild(b)});
+cap.innerHTML='<strong>mask 0</strong> — penalty <strong>319</strong> (winner ✓)';
+const QUIZ=[
+{q:'How many big finder squares does a QR code have?',o:['1','2','3','4'],a:2,e:'Three corners. The missing corner tells orientation.'},
+{q:'What is the finder light/dark width ratio?',o:['1:1:1:1:1','1:1:3:1:1','2:2:2:2:2','3:1:1:1:3'],a:1,e:'Black-white-black-white-black = 1:1:3:1:1 — rarest in print surveys.'},
+{q:'Byte mode starts with which 4 bits?',o:['0001','0100','1000','1111'],a:1,e:'0100 = “plain bytes follow”. Then 8-bit length (V1–9).'},
+{q:'V1-M holds 16 bytes. How many text letters fit?',o:['12','14','16','20'],a:1,e:'4+8 bits overhead = 1.5B → 14 letters. The 15th needs V2.'},
+{q:'In GF(256), adding equals…',o:['normal +','XOR','multiply','mod 10'],a:1,e:'3 XOR 7 = 4. Always stays one byte.'},
+{q:'10 check bytes can repair how many broken bytes?',o:['10','6','5','2'],a:2,e:'Each repair needs position + value = 2 check bytes. 10/2 = 5.'},
+{q:'How many mask patterns are tried? Winner for “hello, world”?',o:['4 → 2','8 → 0','8 → 7','2 → 0'],a:1,e:'All 8 tried; checkerboard mask 0 scores 319, lowest.'},
+{q:'Format info is 15 bits. How many copies in the grid?',o:['1','2','3','8'],a:1,e:'Twice — around top-left and split at the others.'},
+{q:'V4 is how big? How many data blocks at M?',o:['29×29, 1','33×33, 2','37×37, 4','41×41, 8'],a:1,e:'33×33, 2×32 interleaved — a scratch hurts both a little.'},
+{q:'Which level allows the biggest centre logo?',o:['L','M','Q','H'],a:3,e:'H has most check bytes — but also makes a bigger code.'}];
+let qi=0,score=0;const Q=document.getElementById('quizQ'),O=document.getElementById('quizOpts'),F=document.getElementById('quizFb'),P=document.getElementById('quizProg'),B=document.getElementById('barfill');
+function render(){const s=QUIZ[qi];Q.textContent='Q'+(qi+1)+'/'+QUIZ.length+': '+s.q;O.innerHTML='';F.textContent='';P.textContent='Score '+score+'/'+QUIZ.length;B.style.width=(qi/QUIZ.length*100)+'%';
+s.o.forEach((t,i)=>{const b=document.createElement('button');b.textContent=t;b.onclick=()=>{if(i===s.a){b.classList.add('ok');F.innerHTML='<span style="color:#34d399">✓ Correct.</span> '+s.e;score++;setTimeout(()=>{qi++;if(qi<QUIZ.length)render();else done()},900)}else{b.classList.add('bad');F.innerHTML='<span style="color:#f87171">✗ Not quite.</span> '+s.e+' — try again.'}};O.appendChild(b)})}
+function done(){B.style.width='100%';let lvl=score<=3?'🌱 Beginner — reread the guide above, then retry!':score<=6?'🔧 Builder — solid! Retry for Advanced.':score<=8?'🚀 Advanced — interview-ready.':'🏆 PRO — QR Master. You beat most candidates.';Q.textContent='You scored '+score+'/'+QUIZ.length;O.innerHTML='<button onclick="qi=0;score=0;render()">↻ Retake quiz</button>';F.innerHTML=lvl;P.textContent='Tip: change the text in quick start and re-run verify.py — real learning is hands-on.'}
+render();
+</script>
+</body>
+</html>
